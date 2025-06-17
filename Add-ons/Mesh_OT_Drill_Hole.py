@@ -26,8 +26,8 @@ PANEL_CATEGORY = "Tool"
 PROP_HOLE_DIAMETER = "drill_tool_hole_diameter"
 PROP_USE_CURSOR = "drill_tool_use_cursor"
 
-# NUOVA COSTANTE per la lunghezza massima del foro
-MAX_DRILL_LENGTH_FALLBACK = 0.1 # 0.1 metri = 10 cm
+# COSTANTE per la lunghezza del foro (ora è la lunghezza fissa)
+FIXED_DRILL_LENGTH = 0.1 # 0.1 metri = 10 cm
 
 class MESH_OT_drill_hole(Operator):
     """Drill a hole through the selected object"""
@@ -89,9 +89,8 @@ class MESH_OT_drill_hole(Operator):
     
     def calculate_drill_path(self, obj, drill_point_world):
         """
-        Calculate drill direction and depth by raycasting through the object.
-        Finds the closest surface point to drill_point_world, then raycasts from outside
-        through the object to find entry and exit points.
+        Calculates drill direction and uses a fixed depth.
+        Only needs to find the entry point.
         """
         
         # Convert drill point to object local space
@@ -103,8 +102,8 @@ class MESH_OT_drill_hole(Operator):
         bvh = BVHTree.FromBMesh(bm)
         
         # Find the closest surface point and its normal
-        # This will be our initial "entry" surface and drill direction
-        # distance param is max distance to search for nearest point
+        # This is the "target" surface where the drill should start
+        # The '10.0' is just a max search distance for find_nearest, not the drill depth
         location_on_surface_local, normal_on_surface_local, face_index, distance = bvh.find_nearest(drill_point_local, 10.0) 
         
         if location_on_surface_local is None:
@@ -112,71 +111,42 @@ class MESH_OT_drill_hole(Operator):
             print("DEBUG: No surface point found near drill_point_world. Object might be empty or too far.")
             return None
         
-        print(f"DEBUG: Surface point found at {location_on_surface_local}, normal: {normal_on_surface_local}")
-        
+        # The drill direction is the normal of the surface pointing INTO the object.
+        # BVH normals point "outside". So we use the negative normal.
         drill_direction_local = -normal_on_surface_local.normalized()
-        print(f"DEBUG: drill_direction_local: {drill_direction_local}")
-
+        
         # --- First Raycast: Find the exact entry point from *outside* the object ---
-        # Start the ray from a point well outside the object along the normal
-        # The bounding box diagonal length is a safe bet for a "large enough" distance
+        # We need to start our ray from a point clearly outside the object,
+        # along the inverse direction of the drill (so, along the surface normal).
         bbox_max_dim = max(obj.dimensions.x, obj.dimensions.y, obj.dimensions.z)
-        # Add some margin to ensure we are definitely outside
-        offset_dist = bbox_max_dim * 1.5 # 1.5 times the longest dimension
-        if offset_dist < 0.1: # Ensure a minimum offset for very small objects
+        offset_dist = bbox_max_dim * 1.5 # Safe distance outside
+        if offset_dist < 0.1: 
             offset_dist = 0.1
 
-        ray_start_outside_local = location_on_surface_local - drill_direction_local * offset_dist
-        print(f"DEBUG: ray_start_outside_local: {ray_start_outside_local}")
+        # Start outside, move inwards along the drill direction
+        # The ray starts from location_on_surface_local, goes OUT along the normal, 
+        # then we cast a ray back IN along the drill direction.
+        ray_start_outside_local = location_on_surface_local + normal_on_surface_local * offset_dist # Go out along surface normal
         
         entry_location_local, entry_normal_local, entry_face_index, entry_distance = bvh.ray_cast(
-            ray_start_outside_local, drill_direction_local, offset_dist * 2 # Max distance for raycast
+            ray_start_outside_local, drill_direction_local, offset_dist * 2 # Cast back in along drill direction
         )
         
         if entry_location_local is None:
             bm.free()
             print("DEBUG: Raycast for entry point failed. Object might be open or ray direction is wrong.")
-            return None # Fallback to general error
-
-        # --- Second Raycast: Find the exit point from *inside* the object ---
-        # Start slightly *after* the entry point to avoid immediate re-intersection with the same face
-        # This epsilon must be very small but not zero to ensure the ray doesn't hit the starting face again
-        epsilon = 0.00001
-        ray_start_inside_local = entry_location_local + drill_direction_local * epsilon
-        
-        # We need to cast a long ray to find the exit point
-        # The max_dim of object is a good guess for depth
-        # NON USIAMO PIÙ bbox_max_dim * 2.0 come max_ray_dist, ma il nostro MAX_DRILL_LENGTH_FALLBACK
-        max_ray_dist_for_exit = MAX_DRILL_LENGTH_FALLBACK + 0.01 # Un po' più del massimo desiderato
-        
-        exit_location_local, exit_normal_local, exit_face_index, exit_distance = bvh.ray_cast(
-            ray_start_inside_local, drill_direction_local, max_ray_dist_for_exit
-        )
-        
-        drill_depth = 0.0 # Default if no exit found
-
-        if exit_location_local is None:
-            # Se il punto di uscita non viene trovato, usa il valore massimo del trapano (10 cm)
-            print(f"DEBUG: No distinct exit point found. Object might not be manifold or ray missed. Using fallback drill length: {MAX_DRILL_LENGTH_FALLBACK:.4f}m.")
-            drill_depth = MAX_DRILL_LENGTH_FALLBACK 
-            # Il punto di partenza è ancora entry_location_local
-        else:
-            # Calcola la profondità tra il punto di ingresso e quello di uscita
-            drill_depth = (exit_location_local - entry_location_local).length
-            
-            # Assicurati che la profondità calcolata non superi il limite massimo (10 cm)
-            if drill_depth > MAX_DRILL_LENGTH_FALLBACK:
-                print(f"DEBUG: Calculated depth {drill_depth:.4f}m exceeds max. Clamping to {MAX_DRILL_LENGTH_FALLBACK:.4f}m.")
-                drill_depth = MAX_DRILL_LENGTH_FALLBACK
-
-            print(f"DEBUG: Exit point: {exit_location_local}, calculated depth: {drill_depth:.4f}m")
+            return None 
 
         bm.free()
         
+        # Now, the depth is simply our fixed maximum length
+        drill_depth = FIXED_DRILL_LENGTH 
+        print(f"DEBUG: Drill depth fixed to: {drill_depth:.4f}m (10cm)")
+        
         # Return data in local space for the cylinder creation, and world_start for its global placement
         return {
-            'start_point_local': entry_location_local, # Local space start point
-            'direction_local': drill_direction_local, # Local space direction
+            'start_point_local': entry_location_local, # Local space start point (on the surface)
+            'direction_local': drill_direction_local, # Local space drill direction (into the object)
             'depth': drill_depth,
             'world_start': obj.matrix_world @ entry_location_local # World space start point
         }
