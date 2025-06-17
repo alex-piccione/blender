@@ -45,14 +45,26 @@ Is not possible to se teh pivot point directly on a vertex.
 ### Move Objects
 
 When you want to move an object and it is selected, clicking "G" will initially move the object to have its Origin where the cursor is in that moment.  
-This behaviour is orrendus, because when you are close to the object and need to move it a little, it moveds the object soo much much that all the screen is not sufficient to move the object where you want.  
+This behaviour is orrendus, because when you are close to the object and need to move it a little, it moves the object soo much much that all the screen  
+ is not sufficient to move the object where you want and laso it amke you loose the visual reference of WHERE you wanted to move the object.    
 It force you to zoom out, while you had zoom in exactly to have more control over the small movement you needed.   
-To correct this behaviour you need to add "Increment" to the Snap.  
+To correct, in part, this behaviour you need to add "Increment" to the Snap.  
+It will help to get the anchor to the grid so close to where we want to move the object, but sometime it does not help at all. 
+  
+#### Move a group of objects
+
+When you have objects that needs to move together, like 2 pieces of wood that are glued, 
 
 ### Take an object from a file to another
 
 Use the "Append" function. In the destination file use "Append" and select the source file.  
 Select "Objects" and than object to copy.
+
+### Link Material
+I have a Material set on Object A and I want it applied to Object B. If I assign it from the drop down a new copy is created with suffix ".001", ".002" etc.  
+To use the same material you need to "Link" the material.  
+
+
 
 ## Tutorials
 
