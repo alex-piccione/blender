@@ -26,6 +26,9 @@ PANEL_CATEGORY = "Tool"
 PROP_HOLE_DIAMETER = "drill_tool_hole_diameter"
 PROP_USE_CURSOR = "drill_tool_use_cursor"
 
+# NUOVA COSTANTE per la lunghezza massima del foro
+MAX_DRILL_LENGTH_FALLBACK = 0.1 # 0.1 metri = 10 cm
+
 class MESH_OT_drill_hole(Operator):
     """Drill a hole through the selected object"""
     bl_idname = OPERATOR_ID
@@ -84,92 +87,167 @@ class MESH_OT_drill_hole(Operator):
         
         return None
     
-    def calculate_drill_path(self, obj, drill_point):
-        """Calculate drill direction and depth by raycasting"""
-        # Convert drill point to object local space
-        local_point = obj.matrix_world.inverted() @ drill_point
+    def calculate_drill_path(self, obj, drill_point_world):
+        """
+        Calculate drill direction and depth by raycasting through the object.
+        Finds the closest surface point to drill_point_world, then raycasts from outside
+        through the object to find entry and exit points.
+        """
         
-        # Create BVH tree for raycasting
+        # Convert drill point to object local space
+        drill_point_local = obj.matrix_world.inverted() @ drill_point_world
+        
         bm = bmesh.new()
         bm.from_mesh(obj.data)
         bm.faces.ensure_lookup_table()
         bvh = BVHTree.FromBMesh(bm)
         
-        # Find the closest surface point and get its normal
-        location, normal, face_index, distance = bvh.find_nearest(local_point)
-        if location is None:
+        # Find the closest surface point and its normal
+        # This will be our initial "entry" surface and drill direction
+        # distance param is max distance to search for nearest point
+        location_on_surface_local, normal_on_surface_local, face_index, distance = bvh.find_nearest(drill_point_local, 10.0) 
+        
+        if location_on_surface_local is None:
             bm.free()
+            print("DEBUG: No surface point found near drill_point_world. Object might be empty or too far.")
             return None
         
-        # Use the surface normal as drill direction
-        drill_direction = normal.normalized()
+        print(f"DEBUG: Surface point found at {location_on_surface_local}, normal: {normal_on_surface_local}")
         
-        # Raycast through the object to find exit point
-        # Cast ray in both directions to find the longest path
-        ray_start = location + drill_direction * 0.001  # Slightly inside
-        ray_direction = -drill_direction  # Drill inward
+        drill_direction_local = -normal_on_surface_local.normalized()
+        print(f"DEBUG: drill_direction_local: {drill_direction_local}")
+
+        # --- First Raycast: Find the exact entry point from *outside* the object ---
+        # Start the ray from a point well outside the object along the normal
+        # The bounding box diagonal length is a safe bet for a "large enough" distance
+        bbox_max_dim = max(obj.dimensions.x, obj.dimensions.y, obj.dimensions.z)
+        # Add some margin to ensure we are definitely outside
+        offset_dist = bbox_max_dim * 1.5 # 1.5 times the longest dimension
+        if offset_dist < 0.1: # Ensure a minimum offset for very small objects
+            offset_dist = 0.1
+
+        ray_start_outside_local = location_on_surface_local - drill_direction_local * offset_dist
+        print(f"DEBUG: ray_start_outside_local: {ray_start_outside_local}")
         
-        hit_location, hit_normal, hit_face_index, hit_distance = bvh.ray_cast(ray_start, ray_direction)
+        entry_location_local, entry_normal_local, entry_face_index, entry_distance = bvh.ray_cast(
+            ray_start_outside_local, drill_direction_local, offset_dist * 2 # Max distance for raycast
+        )
         
-        if hit_location is None:
-            # Try opposite direction
-            ray_direction = drill_direction
-            hit_location, hit_normal, hit_face_index, hit_distance = bvh.ray_cast(ray_start, ray_direction)
-        
-        if hit_location is None:
+        if entry_location_local is None:
             bm.free()
-            return None
+            print("DEBUG: Raycast for entry point failed. Object might be open or ray direction is wrong.")
+            return None # Fallback to general error
+
+        # --- Second Raycast: Find the exit point from *inside* the object ---
+        # Start slightly *after* the entry point to avoid immediate re-intersection with the same face
+        # This epsilon must be very small but not zero to ensure the ray doesn't hit the starting face again
+        epsilon = 0.00001
+        ray_start_inside_local = entry_location_local + drill_direction_local * epsilon
         
-        # Calculate drill depth
-        drill_depth = (hit_location - location).length
+        # We need to cast a long ray to find the exit point
+        # The max_dim of object is a good guess for depth
+        # NON USIAMO PIÙ bbox_max_dim * 2.0 come max_ray_dist, ma il nostro MAX_DRILL_LENGTH_FALLBACK
+        max_ray_dist_for_exit = MAX_DRILL_LENGTH_FALLBACK + 0.01 # Un po' più del massimo desiderato
         
+        exit_location_local, exit_normal_local, exit_face_index, exit_distance = bvh.ray_cast(
+            ray_start_inside_local, drill_direction_local, max_ray_dist_for_exit
+        )
+        
+        drill_depth = 0.0 # Default if no exit found
+
+        if exit_location_local is None:
+            # Se il punto di uscita non viene trovato, usa il valore massimo del trapano (10 cm)
+            print(f"DEBUG: No distinct exit point found. Object might not be manifold or ray missed. Using fallback drill length: {MAX_DRILL_LENGTH_FALLBACK:.4f}m.")
+            drill_depth = MAX_DRILL_LENGTH_FALLBACK 
+            # Il punto di partenza è ancora entry_location_local
+        else:
+            # Calcola la profondità tra il punto di ingresso e quello di uscita
+            drill_depth = (exit_location_local - entry_location_local).length
+            
+            # Assicurati che la profondità calcolata non superi il limite massimo (10 cm)
+            if drill_depth > MAX_DRILL_LENGTH_FALLBACK:
+                print(f"DEBUG: Calculated depth {drill_depth:.4f}m exceeds max. Clamping to {MAX_DRILL_LENGTH_FALLBACK:.4f}m.")
+                drill_depth = MAX_DRILL_LENGTH_FALLBACK
+
+            print(f"DEBUG: Exit point: {exit_location_local}, calculated depth: {drill_depth:.4f}m")
+
         bm.free()
         
+        # Return data in local space for the cylinder creation, and world_start for its global placement
         return {
-            'start_point': location,
-            'direction': drill_direction,
+            'start_point_local': entry_location_local, # Local space start point
+            'direction_local': drill_direction_local, # Local space direction
             'depth': drill_depth,
-            'world_start': obj.matrix_world @ location
+            'world_start': obj.matrix_world @ entry_location_local # World space start point
         }
     
-    def create_hole(self, obj, drill_data, hole_diameter):
+    def create_hole(self, obj, drill_data, hole_diameter_mm):
         """Create the actual hole using boolean operations"""
-        # Switch to Object mode
-        bpy.context.view_layer.objects.active = obj
-        if obj.mode != 'OBJECT':
-            bpy.ops.object.mode_set(mode='OBJECT')
         
-        # Create cylinder for boolean operation
-        radius = (hole_diameter / 1000) / 2  # Convert mm to meters and get radius
-        depth = drill_data['depth'] + 0.01  # Add small margin
+        # Ensure we are in object mode before creating / modifying objects
+        bpy.ops.object.mode_set(mode='OBJECT')
         
-        # Add cylinder
+        radius = (hole_diameter_mm / 1000) / 2 # Convert mm to meters and get radius
+        depth = drill_data['depth'] + 0.001 # Add a tiny margin to ensure clean cut
+
+        # Create cylinder at the world start point of the drill path
         bpy.ops.mesh.primitive_cylinder_add(
             radius=radius,
             depth=depth,
-            location=drill_data['world_start']
+            location=drill_data['world_start'],
+            vertices=16,
+            enter_editmode=False # Create in Object Mode
         )
         
-        cylinder = bpy.context.active_object
-        cylinder.name = "DrillHole_Temp"
+        cylinder = bpy.context.active_object # The newly created cylinder
+        cylinder.name = "DrillHole_Temp_Cutter"
         
         # Align cylinder with drill direction
-        drill_direction = obj.matrix_world.to_3x3() @ drill_data['direction']
-        cylinder.rotation_euler = drill_direction.to_track_quat('Z', 'Y').to_euler()
+        # The cylinder is created along its local Z-axis. 
+        # We need to rotate it so its Z-axis aligns with drill_data['direction_local']
+        # This requires converting the local normal to a world normal for the rotation, 
+        # then applying the rotation to the cylinder which is in world space.
         
-        # Move cylinder to correct position (center it on the drill path)
-        offset = drill_direction.normalized() * (depth / 2)
-        cylinder.location = drill_data['world_start'] + offset
+        # Get the world space direction from the local space direction
+        drill_direction_world = obj.matrix_world.to_3x3() @ drill_data['direction_local']
         
-        # Apply boolean modifier
+        # Calculate rotation from global Z-axis (cylinder default) to drill_direction_world
+        # This correctly aligns the cylinder's axis
+        rot_quat = Vector((0.0, 0.0, 1.0)).rotation_difference(drill_direction_world)
+        cylinder.rotation_mode = 'QUATERNION'
+        cylinder.rotation_quaternion = rot_quat
+        
+        # Center the cylinder along its new axis.
+        # The cylinder is created with its origin at its center.
+        # We want the 'start_point' (entry_location_local) to be at one end of the cylinder.
+        # So we move the cylinder's origin by half its depth *along its axis* from the world_start.
+        # The 'start_point' is the entry location. The cylinder's center should be (start_point + direction + depth/2)
+        
+        # The cylinder's current location is already 'world_start'
+        # We need to offset it along its own aligned axis by half its depth
+        offset_vector = cylinder.matrix_world.to_3x3() @ Vector((0,0,1)) * (depth / 2)
+        cylinder.location -= offset_vector # Subtract because we want the start of cylinder to be at world_start
+        
+        # Apply boolean modifier to the original object
+        # Ensure original object is active
+        bpy.ops.object.select_all(action='DESELECT')
+        obj.select_set(True)
         bpy.context.view_layer.objects.active = obj
+        
         modifier = obj.modifiers.new(name="DrillHole", type='BOOLEAN')
         modifier.operation = 'DIFFERENCE'
         modifier.object = cylinder
-        
+        modifier.solver = 'EXACT' # 'EXACT' is generally more robust for complex geometry like holes
+
         # Apply modifier
-        bpy.ops.object.modifier_apply(modifier="DrillHole")
-        
+        try:
+            bpy.ops.object.modifier_apply(modifier="DrillHole")
+        except RuntimeError as e:
+            self.report({'ERROR'}, f"Failed to apply boolean modifier: {e}. Check mesh for non-manifold geometry.")
+            # Still try to delete cutter even if boolean fails
+            bpy.data.objects.remove(cylinder, do_unlink=True)
+            return
+            
         # Delete temporary cylinder
         bpy.data.objects.remove(cylinder, do_unlink=True)
 
