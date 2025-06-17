@@ -16,27 +16,21 @@ bl_info = {
     "category": "Mesh",
 }
 
+# Constants to avoid magic strings
+OPERATOR_ID = "mesh.drill_hole"
+PANEL_ID = "VIEW3D_PT_drill_hole"
+PANEL_LABEL = "Drill Hole Tool"
+PANEL_CATEGORY = "Tool"
+
+# Property names (with unique prefixes to avoid conflicts)
+PROP_HOLE_DIAMETER = "drill_tool_hole_diameter"
+PROP_USE_CURSOR = "drill_tool_use_cursor"
+
 class MESH_OT_drill_hole(Operator):
     """Drill a hole through the selected object"""
-    bl_idname = "mesh.drill_hole"
+    bl_idname = OPERATOR_ID
     bl_label = "Drill Hole"
     bl_options = {'REGISTER', 'UNDO'}
-    
-    # Properties
-    hole_diameter: bpy.props.FloatProperty(
-        name="Hole Diameter",
-        description="Diameter of the hole in mm",
-        default=4.0,
-        min=0.1,
-        max=50.0,
-        unit='LENGTH'
-    )
-    
-    use_cursor: bpy.props.BoolProperty(
-        name="Use 3D Cursor",
-        description="Use 3D cursor position as hole center",
-        default=True
-    )
     
     @classmethod
     def poll(cls, context):
@@ -46,7 +40,11 @@ class MESH_OT_drill_hole(Operator):
     def execute(self, context):
         obj = context.active_object
         
-        if self.use_cursor:
+        # Read settings from Scene properties (set by the panel)
+        hole_diameter = getattr(context.scene, PROP_HOLE_DIAMETER)
+        use_cursor = getattr(context.scene, PROP_USE_CURSOR)
+        
+        if use_cursor:
             # Use 3D cursor position
             drill_point = context.scene.cursor.location.copy()
         else:
@@ -63,9 +61,9 @@ class MESH_OT_drill_hole(Operator):
             return {'CANCELLED'}
         
         # Create the hole
-        self.create_hole(obj, drill_data)
+        self.create_hole(obj, drill_data, hole_diameter)
         
-        self.report({'INFO'}, f"Hole drilled with diameter {self.hole_diameter}mm")
+        self.report({'INFO'}, f"Hole drilled with diameter {hole_diameter}mm")
         return {'FINISHED'}
     
     def get_selection_center(self, obj):
@@ -134,7 +132,7 @@ class MESH_OT_drill_hole(Operator):
             'world_start': obj.matrix_world @ location
         }
     
-    def create_hole(self, obj, drill_data):
+    def create_hole(self, obj, drill_data, hole_diameter):
         """Create the actual hole using boolean operations"""
         # Switch to Object mode
         bpy.context.view_layer.objects.active = obj
@@ -142,7 +140,7 @@ class MESH_OT_drill_hole(Operator):
             bpy.ops.object.mode_set(mode='OBJECT')
         
         # Create cylinder for boolean operation
-        radius = (self.hole_diameter / 1000) / 2  # Convert mm to meters and get radius
+        radius = (hole_diameter / 1000) / 2  # Convert mm to meters and get radius
         depth = drill_data['depth'] + 0.01  # Add small margin
         
         # Add cylinder
@@ -178,11 +176,11 @@ class MESH_OT_drill_hole(Operator):
 
 class VIEW3D_PT_drill_hole_panel(Panel):
     """Panel for drill hole tool"""
-    bl_label = "Drill Hole Tool"
-    bl_idname = "VIEW3D_PT_drill_hole"
+    bl_label = PANEL_LABEL
+    bl_idname = PANEL_ID
     bl_space_type = 'VIEW_3D'
     bl_region_type = 'UI'
-    bl_category = "Tool"
+    bl_category = PANEL_CATEGORY
     
     def draw(self, context):
         layout = self.layout
@@ -191,26 +189,30 @@ class VIEW3D_PT_drill_hole_panel(Panel):
         box = layout.box()
         box.label(text="Instructions:", icon='INFO')
         box.label(text="1. Select target object")
-        box.label(text="2. Position 3D cursor or")
+        box.label(text="2. Adjust settings below")
+        box.label(text="3. Position 3D cursor or")
         box.label(text="   select face/vertices")
-        box.label(text="3. Click 'Drill Hole'")
+        box.label(text="4. Click 'Drill Hole'")
         
         layout.separator()
         
-        # Settings
-        col = layout.column()
-        col.prop(context.scene, "drill_hole_diameter")
-        col.prop(context.scene, "drill_use_cursor")
+        # Settings section - these directly control the Scene properties
+        layout.label(text="Drill Settings:", icon='SETTINGS')
+        col = layout.column(align=True)
+        
+        # Show the Scene properties in the UI
+        col.prop(context.scene, PROP_HOLE_DIAMETER)
+        col.prop(context.scene, PROP_USE_CURSOR)
         
         layout.separator()
         
-        # Main operator
-        op = layout.operator("mesh.drill_hole", text="Drill Hole", icon='TOOL_SETTINGS')
+        # The drill button - uses settings from above
+        layout.operator(OPERATOR_ID, text="Drill Hole", icon='TOOL_SETTINGS')
 
 
 def register():
-    # Register properties
-    bpy.types.Scene.drill_hole_diameter = bpy.props.FloatProperty(
+    # Register Scene properties with unique names to avoid conflicts
+    bpy.types.Scene.drill_tool_hole_diameter = bpy.props.FloatProperty(
         name="Hole Diameter (mm)",
         description="Diameter of the hole in millimeters",
         default=4.0,
@@ -218,12 +220,13 @@ def register():
         max=50.0
     )
     
-    bpy.types.Scene.drill_use_cursor = bpy.props.BoolProperty(
+    bpy.types.Scene.drill_tool_use_cursor = bpy.props.BoolProperty(
         name="Use 3D Cursor",
         description="Use 3D cursor position as hole center",
         default=True
     )
     
+    # Register classes
     bpy.utils.register_class(MESH_OT_drill_hole)
     bpy.utils.register_class(VIEW3D_PT_drill_hole_panel)
 
@@ -232,8 +235,9 @@ def unregister():
     bpy.utils.unregister_class(MESH_OT_drill_hole)
     bpy.utils.unregister_class(VIEW3D_PT_drill_hole_panel)
     
-    del bpy.types.Scene.drill_hole_diameter
-    del bpy.types.Scene.drill_use_cursor
+    # Clean up Scene properties
+    del bpy.types.Scene.drill_tool_hole_diameter
+    del bpy.types.Scene.drill_tool_use_cursor
 
 
 if __name__ == "__main__":
