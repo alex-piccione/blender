@@ -53,7 +53,9 @@ It will help to get the anchor to the grid so close to where we want to move the
   
 #### Move a group of objects
 
-When you have objects that needs to move together, like 2 pieces of wood that are glued, 
+When you have objects that needs to move together, like 2 pieces of wood that are glued, the best option is to make one object the Parent.  
+To do so, select all the objects (if them are in a Colelction is easier) and the Active one must be the one to set as Parent.  
+Use the Object -> Parent -> Object command (CTRL P).  
 
 ### Take an object from a file to another
 

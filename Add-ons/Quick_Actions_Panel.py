@@ -4,15 +4,15 @@ bl_info = {
     "name": "Quick Actions",
     "author": "Alessandro Piccione",
     "version": (25, 5, 6),
-    "blender": (4, 0, 0), # minimum Blender version
+    "blender": (4, 2, 0), # minimum Blender version
     "category": "Object",
-    "description": "Add various utilities (Apply All Transforms, Set Origin on Point...)"
+    "description": "Add some quick actions (Apply All Transforms, Set Origin on Point...)"
 }
 
-class OBJECT_PT_apply_all_button(bpy.types.Panel):
+class QUICK_ACTIONS_PT_panel(bpy.types.Panel):
     """Creates a Panel in the Object properties windows"""
-    bl_label = bl_info["name"]  #"Quick Actions"
-    bl_idname = "OBJECT_PT_apply_transformations"
+    bl_label = bl_info["name"] 
+    bl_idname = "QUICK_ACTIONS_PT_panel"
     bl_space_type = "PROPERTIES"
     bl_region_type = "WINDOW"
     bl_context = "object"
@@ -42,10 +42,10 @@ class OBJECT_PT_apply_all_button(bpy.types.Panel):
         #row.operator("object.select", text="Select Object").toggle = True
         
 def register():
-    bpy.utils.register_class(OBJECT_PT_apply_all_button)
+    bpy.utils.register_class(QUICK_ACTIONS_PT_panel)
     
 def unregister():
-    bpy.utils.unregiste_class(OBJECT_PT_apply_all_button)
+    bpy.utils.unregiste_class(QUICK_ACTIONS_PT_panel)
         
 if __name__ == "__main__" :
     register()    
