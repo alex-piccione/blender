@@ -3,13 +3,12 @@ import bmesh
 from bpy.types import Operator, Panel
 from mathutils import Vector
 from mathutils.bvhtree import BVHTree
-import gpu
-from gpu_extras.batch import batch_for_shader
+from typing import NamedTuple
 
 bl_info = {
-    "name": "Drill Hole Tool",
+    "name": "Drill Hole",
     "author": "Alessandro Piccione",
-    "version": (25, 6, 17),
+    "version": (25, 6, 19),
     "blender": (4, 2, 0),
     "location": "View3D > Sidebar > Tool",
     "description": "Create drill holes through objects",
@@ -19,15 +18,22 @@ bl_info = {
 # Constants to avoid magic strings
 OPERATOR_ID = "mesh.drill_hole"
 PANEL_ID = "VIEW3D_PT_drill_hole"
-PANEL_LABEL = "Drill Hole Tool"
+PANEL_LABEL = "Drill Hole"
 PANEL_CATEGORY = "Tool"
 
 # Property names (with unique prefixes to avoid conflicts)
 PROP_HOLE_DIAMETER = "drill_tool_hole_diameter"
+PROP_HOLE_LENGTH = "drill_tool_hole_length"
 PROP_USE_CURSOR = "drill_tool_use_cursor"
 
-# COSTANTE per la lunghezza del foro (ora è la lunghezza fissa)
-FIXED_DRILL_LENGTH = 0.1 # 0.1 metri = 10 cm
+# COSTANT for the max length of the hole
+MAX_DRILL_LENGTH = 150/1000 # 150mm = 15 cm
+HOLE_CYLINDER_SEGMENTS = 16  # Number of segments for the drill hole cylinder
+
+# Data for the Drill
+class DrillData(NamedTuple):
+    start_point: Vector
+    direction: Vector
 
 class MESH_OT_drill_hole(Operator):
     """Drill a hole through the selected object"""
@@ -45,6 +51,7 @@ class MESH_OT_drill_hole(Operator):
         
         # Read settings from Scene properties (set by the panel)
         hole_diameter = getattr(context.scene, PROP_HOLE_DIAMETER)
+        hole_length = getattr(context.scene, PROP_HOLE_LENGTH)
         use_cursor = getattr(context.scene, PROP_USE_CURSOR)
         
         if use_cursor:
@@ -64,7 +71,7 @@ class MESH_OT_drill_hole(Operator):
             return {'CANCELLED'}
         
         # Create the hole
-        self.create_hole(obj, drill_data, hole_diameter)
+        self.create_hole(obj, drill_data, hole_diameter, hole_length)
         
         self.report({'INFO'}, f"Hole drilled with diameter {hole_diameter}mm")
         return {'FINISHED'}
@@ -88,10 +95,7 @@ class MESH_OT_drill_hole(Operator):
         return None
     
     def calculate_drill_path(self, obj, drill_point_world):
-        """
-        Calculates drill direction and uses a fixed depth.
-        Only needs to find the entry point.
-        """
+        """Calculates drill entry point and direction, in world space."""
         
         # Convert drill point to object local space
         drill_point_local = obj.matrix_world.inverted() @ drill_point_world
@@ -137,35 +141,29 @@ class MESH_OT_drill_hole(Operator):
             print("DEBUG: Raycast for entry point failed. Object might be open or ray direction is wrong.")
             return None 
 
-        bm.free()
-        
-        # Now, the depth is simply our fixed maximum length
-        drill_depth = FIXED_DRILL_LENGTH 
-        print(f"DEBUG: Drill depth fixed to: {drill_depth:.4f}m (10cm)")
-        
-        # Return data in local space for the cylinder creation, and world_start for its global placement
-        return {
-            'start_point_local': entry_location_local, # Local space start point (on the surface)
-            'direction_local': drill_direction_local, # Local space drill direction (into the object)
-            'depth': drill_depth,
-            'world_start': obj.matrix_world @ entry_location_local # World space start point
-        }
-    
-    def create_hole(self, obj, drill_data, hole_diameter_mm):
+        bm.free()   
+
+        # Calculate the world space start point and direction for the drill
+        return DrillData(
+            entry_location_local @ obj.matrix_world, 
+            drill_direction_local @ obj.matrix_world.to_3x3()
+            )
+            
+    def create_hole(self, obj, drill_data:DrillData, hole_diameter, hole_length):
         """Create the actual hole using boolean operations"""
         
         # Ensure we are in object mode before creating / modifying objects
         bpy.ops.object.mode_set(mode='OBJECT')
         
-        radius = (hole_diameter_mm / 1000) / 2 # Convert mm to meters and get radius
-        depth = drill_data['depth'] + 0.001 # Add a tiny margin to ensure clean cut
+        radius = (hole_diameter) / 2 # Convert mm to meters and get radius
+        depth = (hole_length) # + 0.001 # Convert to meters and add a tiny margin to ensure clean cut
 
         # Create cylinder at the world start point of the drill path
         bpy.ops.mesh.primitive_cylinder_add(
             radius=radius,
             depth=depth,
-            location=drill_data['world_start'],
-            vertices=16,
+            location=drill_data.start_point,
+            vertices=HOLE_CYLINDER_SEGMENTS,
             enter_editmode=False # Create in Object Mode
         )
         
@@ -174,27 +172,19 @@ class MESH_OT_drill_hole(Operator):
         
         # Align cylinder with drill direction
         # The cylinder is created along its local Z-axis. 
-        # We need to rotate it so its Z-axis aligns with drill_data['direction_local']
-        # This requires converting the local normal to a world normal for the rotation, 
+        # We need to rotate it so its Z-axis aligns with drill direction
         # then applying the rotation to the cylinder which is in world space.
-        
-        # Get the world space direction from the local space direction
-        drill_direction_world = obj.matrix_world.to_3x3() @ drill_data['direction_local']
-        
+               
         # Calculate rotation from global Z-axis (cylinder default) to drill_direction_world
         # This correctly aligns the cylinder's axis
-        rot_quat = Vector((0.0, 0.0, 1.0)).rotation_difference(drill_direction_world)
+        rot_quat = Vector((0.0, 0.0, 1.0)).rotation_difference(drill_data.direction)
         cylinder.rotation_mode = 'QUATERNION'
         cylinder.rotation_quaternion = rot_quat
         
-        # Center the cylinder along its new axis.
-        # The cylinder is created with its origin at its center.
-        # We want the 'start_point' (entry_location_local) to be at one end of the cylinder.
-        # So we move the cylinder's origin by half its depth *along its axis* from the world_start.
-        # The 'start_point' is the entry location. The cylinder's center should be (start_point + direction + depth/2)
+        # CeMoventer the cylinder along its new axis.
         
-        # The cylinder's current location is already 'world_start'
-        # We need to offset it along its own aligned axis by half its depth
+        # The cylinder is created with its origin at its center, that is the start point of the drill.
+        # We need to offset it along its own aligned axis by half its depth 
         offset_vector = cylinder.matrix_world.to_3x3() @ Vector((0,0,1)) * (depth / 2)
         cylinder.location -= offset_vector # Subtract because we want the start of cylinder to be at world_start
         
@@ -214,9 +204,6 @@ class MESH_OT_drill_hole(Operator):
             bpy.ops.object.modifier_apply(modifier="DrillHole")
         except RuntimeError as e:
             self.report({'ERROR'}, f"Failed to apply boolean modifier: {e}. Check mesh for non-manifold geometry.")
-            # Still try to delete cutter even if boolean fails
-            bpy.data.objects.remove(cylinder, do_unlink=True)
-            return
             
         # Delete temporary cylinder
         bpy.data.objects.remove(cylinder, do_unlink=True)
@@ -233,14 +220,14 @@ class VIEW3D_PT_drill_hole_panel(Panel):
     def draw(self, context):
         layout = self.layout
         
-        # Instructions
         box = layout.box()
-        box.label(text="Instructions:", icon='INFO')
-        box.label(text="1. Select target object")
-        box.label(text="2. Adjust settings below")
-        box.label(text="3. Position 3D cursor or")
-        box.label(text="   select face/vertices")
-        box.label(text="4. Click 'Drill Hole'")
+        col = box.column(align=True)
+        col.label(text="Instructions:", icon='INFO')
+        col.separator(factor=0.5)
+        col.label(text="1. Select target object")
+        col.label(text="2. Adjust settings below")
+        col.label(text="3. Position 3D cursor or select faces")
+        col.label(text="4. Click 'Drill Hole'")
         
         layout.separator()
         
@@ -249,8 +236,9 @@ class VIEW3D_PT_drill_hole_panel(Panel):
         col = layout.column(align=True)
         
         # Show the Scene properties in the UI
-        col.prop(context.scene, PROP_HOLE_DIAMETER)
         col.prop(context.scene, PROP_USE_CURSOR)
+        col.prop(context.scene, PROP_HOLE_DIAMETER, icon='MESH_UVSPHERE')
+        col.prop(context.scene, PROP_HOLE_LENGTH, icon='OUTLINER_OB_MESH') #MESH_CYLINDER
         
         layout.separator()
         
@@ -261,16 +249,32 @@ class VIEW3D_PT_drill_hole_panel(Panel):
 def register():
     # Register Scene properties with unique names to avoid conflicts
     bpy.types.Scene.drill_tool_hole_diameter = bpy.props.FloatProperty(
-        name="Hole Diameter (mm)",
-        description="Diameter of the hole in millimeters",
-        default=4.0,
-        min=0.1,
-        max=50.0
+        name="Hole Diameter",
+        description="Diameter",
+        default=4/1000, # 4mm
+        min=2.0/1000,
+        max=50.0/1000,
+        step=5/1000,
+        #soft_min=3/1000,
+        soft_max=14/1000,  # soft limits for UI slider
+        unit='LENGTH',
+    )
+
+    bpy.types.Scene.drill_tool_hole_length = bpy.props.FloatProperty(
+        name="Hole Length",
+        description="Length",
+        default=MAX_DRILL_LENGTH,  # by default is a passing-by drill
+        min=5/1000,  # minimum length is 5mm
+        max=MAX_DRILL_LENGTH,
+        step=5/1000,
+        #soft_min=20/1000,  # 3cm
+        #soft_max=50/1000,  # 5cm
+        unit='LENGTH',
     )
     
     bpy.types.Scene.drill_tool_use_cursor = bpy.props.BoolProperty(
         name="Use 3D Cursor",
-        description="Use 3D cursor position as hole center",
+        description="Use 3D cursor position as hole center (otherwise object center will be used)",
         default=True
     )
     
@@ -285,6 +289,7 @@ def unregister():
     
     # Clean up Scene properties
     del bpy.types.Scene.drill_tool_hole_diameter
+    del bpy.types.Scene.drill_tool_hole_length
     del bpy.types.Scene.drill_tool_use_cursor
 
 
