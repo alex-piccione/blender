@@ -77,3 +77,8 @@ To use the same material you need to "Link" the material.
 ## Plugins
 
 
+
+
+## AI for Blender
+
+https://www.youtube.com/watch?v=0PSOCFHBAfw&t=69s
