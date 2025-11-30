@@ -1,9 +1,10 @@
 import bpy
+import bmesh
 
 bl_info = {
     "name": "Quick Actions",
     "author": "Alessandro Piccione",
-    "version": (25, 11, 30),
+    "version": (25, 11, 30.2),
     "blender": (4, 3, 0), # minimum Blender version
     "category": "Object",
     "description": "Add some quick actions (Apply All Transforms, Set Origin on Point, ...)"
@@ -51,13 +52,22 @@ class QUICK_ACTIONS_OT_round_corner(bpy.types.Operator):
     bl_label = "Round Corner"
     bl_options = {'REGISTER', 'UNDO'}
 
+    radius = bpy.props.FloatProperty(
+        name="Radius",
+        description="Bevel radius",
+        default=0.005,
+        min=0.0,
+        unit='LENGTH'
+    )
+
     @classmethod
     def poll(cls, context):
         return context.active_object is not None and context.mode == 'EDIT_MESH'
 
+    def invoke(self, context, event):
+        return context.window_manager.invoke_props_dialog(self)
+
     def execute(self, context):
-        import bmesh
-        
         obj = context.active_object
         me = obj.data
         bm = bmesh.from_edit_mesh(me)
@@ -70,7 +80,7 @@ class QUICK_ACTIONS_OT_round_corner(bpy.types.Operator):
             return {'CANCELLED'}
             
         # Apply bevel
-        bpy.ops.mesh.bevel(offset=0.005, segments=5)
+        bpy.ops.mesh.bevel(offset=self.radius, segments=5)
         
         return {'FINISHED'}
         
