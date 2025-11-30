@@ -25,7 +25,7 @@ TAB: switch between Objewct and Edit mode
 ### Create a parallelepipede
 
 "Add" -> Mesh.Plane  
-"n" -> show vakues, set X and Y val-ues.  
+"n" -> show values, set X and Y values.  
 Extrude -> select Z and enter the value
 
 
