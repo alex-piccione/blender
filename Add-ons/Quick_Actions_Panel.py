@@ -3,10 +3,10 @@ import bpy
 bl_info = {
     "name": "Quick Actions",
     "author": "Alessandro Piccione",
-    "version": (25, 5, 6),
-    "blender": (4, 2, 0), # minimum Blender version
+    "version": (25, 11, 30),
+    "blender": (4, 3, 0), # minimum Blender version
     "category": "Object",
-    "description": "Add some quick actions (Apply All Transforms, Set Origin on Point...)"
+    "description": "Add some quick actions (Apply All Transforms, Set Origin on Point, ...)"
 }
 
 class QUICK_ACTIONS_PT_panel(bpy.types.Panel):
@@ -38,14 +38,49 @@ class QUICK_ACTIONS_PT_panel(bpy.types.Panel):
         #bpy.ops.object.origin_set(type='ORIGIN_CURSOR', center='MEDIAN')
         row.operator("object.origin_set", text="Set Origin on 3D Cursor").type = "ORIGIN_CURSOR"
 
+        ## Round Corner button
+        row = layout.row()
+        row.operator("quick_actions.round_corner", text="Round Corner")
+
         #layout.operator("object.origin_set", text="Origin to Center").type = 'ORIGIN_CENTER_OF_MASS'
         #row.operator("object.select", text="Select Object").toggle = True
         
+class QUICK_ACTIONS_OT_round_corner(bpy.types.Operator):
+    """Bevel selected edges with 5 segments and 5mm radius"""
+    bl_idname = "quick_actions.round_corner"
+    bl_label = "Round Corner"
+    bl_options = {'REGISTER', 'UNDO'}
+
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None and context.mode == 'EDIT_MESH'
+
+    def execute(self, context):
+        import bmesh
+        
+        obj = context.active_object
+        me = obj.data
+        bm = bmesh.from_edit_mesh(me)
+        
+        # Check if any edges are selected
+        selected_edges = [e for e in bm.edges if e.select]
+        
+        if not selected_edges:
+            self.report({'WARNING'}, "No edges selected")
+            return {'CANCELLED'}
+            
+        # Apply bevel
+        bpy.ops.mesh.bevel(offset=0.005, segments=5)
+        
+        return {'FINISHED'}
+        
 def register():
     bpy.utils.register_class(QUICK_ACTIONS_PT_panel)
+    bpy.utils.register_class(QUICK_ACTIONS_OT_round_corner)
     
 def unregister():
-    bpy.utils.unregiste_class(QUICK_ACTIONS_PT_panel)
+    bpy.utils.unregister_class(QUICK_ACTIONS_PT_panel)
+    bpy.utils.unregister_class(QUICK_ACTIONS_OT_round_corner)
         
 if __name__ == "__main__" :
-    register()    
+    register()
