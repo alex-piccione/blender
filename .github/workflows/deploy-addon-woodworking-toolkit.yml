@@ -5,6 +5,9 @@ on:
     branches:
       - main
 
+env:
+  VERSION: 0.1.${{ github.run_number }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -14,10 +17,10 @@ jobs:
 
       - name: Create zip file
         run: |
-          zip -r woodworking_toolkit.zip Add-ons/WoodworkingToolkit
+          zip -r woodworking_toolkit_${{ env.VERSION }}.zip Add-ons/WoodworkingToolkit
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact
         with:
-          name: woodworking_toolkit.zip
-          path: woodworking_toolkit.zip
+          name: woodworking_toolkit_${{ env.VERSION }}.zip
+          path: woodworking_toolkit_${{ env.VERSION }}.zip
