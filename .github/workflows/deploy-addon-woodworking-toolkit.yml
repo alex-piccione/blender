@@ -1,0 +1,23 @@
+name: Create Woodworking Toolkit Add-on Zip
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Create zip file
+        run: |
+          zip -r woodworking_toolkit.zip Add-ons/WoodworkingToolkit
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: woodworking_toolkit.zip
+          path: woodworking_toolkit.zip
