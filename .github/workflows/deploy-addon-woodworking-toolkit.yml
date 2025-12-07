@@ -30,7 +30,9 @@ jobs:
           sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
 
       - name: Create zip file
-        run: zip -r artifact.zip Add-ons/WoodworkingToolkit
+        run: |
+          cd Add-ons
+          zip -r artifact.zip WoodworkingToolkit
 
       - name: Create GitHub Release
         id: create_release
