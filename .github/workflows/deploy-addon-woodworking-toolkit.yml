@@ -18,7 +18,7 @@ jobs:
         id: versioning
         run: | 
           # generate local version in this step
-          VERSION=$(date +'%y.%-m.%-d').${{ github.run_number }}
+          VERSION=$(date +'%y.%-m.%-d')-${{ github.run_number }}
           # create OUTPUT variables for next steps
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
@@ -27,6 +27,7 @@ jobs:
       - name: Update version in manifest and init file
         run: |
           VERSION=${{ steps.versioning.outputs.VERSION }}
+          # this MUST be major.minor.patch for Blender to accept it (majior.minor.patch.build is not accepted)
           PYTHON_VERSION=${{ steps.versioning.outputs.PYTHON_VERSION }}
           sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
           sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
