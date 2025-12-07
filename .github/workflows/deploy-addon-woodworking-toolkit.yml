@@ -20,7 +20,10 @@ jobs:
 
       - name: Create Version
         run: | 
-          echo "VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }} >> $GITHUB_ENV
+          # generate local version in this step
+          VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }}
+          # create environment variables for next steps
+          echo "VERSION=$VERSION >> $GITHUB_ENV
           PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
 
