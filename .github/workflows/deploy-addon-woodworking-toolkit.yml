@@ -24,7 +24,7 @@ jobs:
           # generate local version in this step
           VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }}
           # create OUTPUT variables for next steps
-          echo "VERSION=$VERSION >> $GITHUB_OUTPUT
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
           echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_OUTPUT
 
