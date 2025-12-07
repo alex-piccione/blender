@@ -17,7 +17,8 @@ tags = ["Modeling", "Tools", "Woodworking"]
 [build]
 # This ensures only this folder is zipped when using automated builders
 include = [
-    "**/*.py",
+    "*.py",          # root Python files, including __init__.py
+    "**/*.py",       # Python files in any subfolders
     "README.md",
     "blender_manifest.toml"
 ]
