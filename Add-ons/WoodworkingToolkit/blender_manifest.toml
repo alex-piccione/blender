@@ -3,6 +3,8 @@ schema_version = "1.0.0"
 id = "woodworking_toolkit"
 version = "__VERSION__"
 name = "Woodworking Toolkit"
+tagline = "A toolkit for woodworking modeling and tools in Blender"
+author = "Alessandro Piccione"
 license = "Unlicense"
 type = "add-on"
 
@@ -17,7 +19,7 @@ tags = ["Modeling", "Tools", "Woodworking"]
 [build]
 # This ensures only this folder is zipped when using automated builders
 include = [
-    "*.py",          # root Python files, including __init__.py
+    "*.py",          # Python files in the root folder
     "**/*.py",       # Python files in any subfolders
     "README.md",
     "blender_manifest.toml"
