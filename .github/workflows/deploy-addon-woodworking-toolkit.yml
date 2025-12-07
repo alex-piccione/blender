@@ -16,7 +16,7 @@ jobs:
       contents: write  # Grant write permission to the GITHUB_TOKEN
     steps:     
       - name: Create Version
-        run: echo "VERSION=$(date +'%y.%m.%d')".${{ github.run_number }} >> $GITHUB_ENV
+        run: echo "VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }} >> $GITHUB_ENV
 
       - name: Checkout code
         uses: actions/checkout@v3
