@@ -1,0 +1,23 @@
+schema_version = "1.0.0"
+
+id = "woodworking_toolkit"
+version = "__VERSION__"
+name = "Woodworking Toolkit"
+license = "Unlicense"
+type = "add-on"
+
+blender_version_min = "4.3.0"
+
+maintainer = "Alessandro Piccione"
+homepage = "https://github.com/alex-piccione/blender/tree/main/Add-ons/WoodworkingToolkit"
+category = "3D View"
+
+tags = ["Modeling", "Tools", "Woodworking"]
+
+[build]
+# This ensures only this folder is zipped when using automated builders
+include = [
+    "**/*.py",
+    "README.md",
+    "blender_manifest.toml"
+]

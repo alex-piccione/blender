@@ -15,15 +15,23 @@ jobs:
     permissions:
       contents: write  # Grant write permission to the GITHUB_TOKEN
     steps:     
-      - name: Create Version
-        run: echo "VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }} >> $GITHUB_ENV
-
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Create Version
+        run: | 
+          echo "VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }} >> $GITHUB_ENV
+          PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+
+      - name: Update version in manifest and init file
+        run: |
+          VERSION="${env.VERSION}"
+          sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
+          sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
+
       - name: Create zip file
-        run: |          
-          zip -r artifact.zip Add-ons/WoodworkingToolkit
+        run: zip -r artifact.zip Add-ons/WoodworkingToolkit
 
       - name: Create GitHub Release
         id: create_release
