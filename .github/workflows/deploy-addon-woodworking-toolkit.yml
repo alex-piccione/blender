@@ -5,9 +5,8 @@ on:
     branches:
       - main
 
-#env:
-  #VERSION: 0.1.${{ github.run_number }}  # default to avoid intellisense error
-  #VERSION: ${{ format('{0:yy.MM.dd}', github.event.repository.pushed_at) }}.${{ github.run_number }}
+env:
+  VERSION: ${{ format('{0:yy.M.d}', github.event.repository.pushed_at) }}.${{ github.run_number }}
 
 jobs:
   build:
@@ -22,7 +21,7 @@ jobs:
         id: versioning
         run: | 
           # generate local version in this step
-          VERSION=$(date +'%y.%-m.%-d').${{ github.run_number }}
+          #VERSION=$(date +'%y.%-m.%-d').${{ github.run_number }}
           # create OUTPUT variables for next steps
           echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
           PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
