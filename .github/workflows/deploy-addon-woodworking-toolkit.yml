@@ -5,8 +5,8 @@ on:
     branches:
       - main
 
-env:
-  VERSION: 0.1.${{ github.run_number }}  # default to avoid intellisense error
+#env:
+  #VERSION: 0.1.${{ github.run_number }}  # default to avoid intellisense error
   #VERSION: ${{ format('{0:yy.MM.dd}', github.event.repository.pushed_at) }}.${{ github.run_number }}
 
 jobs:
