@@ -32,6 +32,11 @@ jobs:
           sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
           sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
 
+      - name: Print version name
+        run: |
+          echo "### Version: ${{ steps.versioning.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Python Version: ${{ steps.versioning.outputs.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+
       - name: Create zip file
         run: |
           cd Add-ons
