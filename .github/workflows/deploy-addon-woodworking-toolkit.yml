@@ -19,8 +19,31 @@ jobs:
         run: |
           zip -r woodworking_toolkit_${{ env.VERSION }}.zip Add-ons/WoodworkingToolkit
 
-      - name: Upload artifact
-        uses: actions/upload-artifact@v4
+      #- name: Upload artifact
+      #  uses: actions/upload-artifact@v4
+      #  with:
+      #    name: woodworking_toolkit_${{ env.VERSION }}.zip
+      #    path: woodworking_toolkit_${{ env.VERSION }}.zip
+
+      - name: Create GitHub Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by GitHub
         with:
-          name: woodworking_toolkit_${{ env.VERSION }}.zip
-          path: woodworking_toolkit_${{ env.VERSION }}.zip
+          tag_name: v${{ env.VERSION }}
+          release_name: Woodworking Toolkit v${{ env.VERSION }}
+          body: |
+            Release of Woodworking Toolkit v${{ env.VERSION }}
+          draft: false
+          prerelease: false
+
+      - name: Upload Release Asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ./woodworking_toolkit_${{ env.VERSION }}.zip
+          asset_name: woodworking_toolkit_${{ env.VERSION }}.zip
+          asset_content_type: application/zip
