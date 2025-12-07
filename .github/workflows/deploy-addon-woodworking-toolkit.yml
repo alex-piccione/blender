@@ -19,16 +19,19 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Create Version
+        id: versioning
         run: | 
           # generate local version in this step
           VERSION=$(date +'%y.%-m.%-d')".${{ github.run_number }}
-          # create environment variables for next steps
-          echo "VERSION=$VERSION >> $GITHUB_ENV
+          # create OUTPUT variables for next steps
+          echo "VERSION=$VERSION >> $GITHUB_OUTPUT
           PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
-          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_ENV
+          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update version in manifest and init file
         run: |
+          VERSION=${{ steps.versioning.outputs.VERSION }}
+          PYTHON_VERSION=${{ steps.versioning.outputs.PYTHON_VERSION }}
           sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
           sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
 
@@ -43,9 +46,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by GitHub
         with:
-          tag_name: ${{ env.VERSION }}
-          release_name: Woodworking Toolkit v${{ env.VERSION }}
-          body: Release of Woodworking Toolkit v${{ env.VERSION }}
+          tag_name: ${{ steps.versioning.outputs.VERSION }}
+          release_name: Woodworking Toolkit v${{ steps.versioning.outputs.VERSION }}
+          body: Release of Woodworking Toolkit v${{ steps.versioning.outputs.VERSION }}
           draft: false
           prerelease: false
 
@@ -56,5 +59,5 @@ jobs:
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: ./artifact.zip
-          asset_name: woodworking_toolkit_v${{ env.VERSION }}.zip
+          asset_name: woodworking_toolkit_v${{ steps.versioning.outputs.VERSION }}.zip
           asset_content_type: application/zip
