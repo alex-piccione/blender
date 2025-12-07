@@ -18,24 +18,27 @@ jobs:
         id: versioning
         run: | 
           # generate local version in this step
-          VERSION=$(date +'%y.%-m.%-d')-${{ github.run_number }}
+          FULL_VERSION=$(date +'%y.%-m.%-d')-${{ github.run_number }}
+
           # create OUTPUT variables for next steps
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          PYTHON_VERSION=$(echo $VERSION | tr '.' ',')
-          echo "PYTHON_VERSION=$PYTHON_VERSION" >> $GITHUB_OUTPUT
+          echo "VERSION=$FULL_VERSION" >> $GITHUB_OUTPUT
+          # Blender version MUST be major.minor.patch (majior.minor.patch.build or majior.minor.patch-build are not accepted)
+          BLENDER_VERSION=$(echo "${FULL_VERSION%%-*}" | tr '.' ',')
+          #  %%-*  takes the longhest match from the first dash to the end
+          echo "BLENDER_VERSION=$BLENDER_VERSION" >> $GITHUB_OUTPUT
 
       - name: Update version in manifest and init file
         run: |
           VERSION=${{ steps.versioning.outputs.VERSION }}
-          # this MUST be major.minor.patch for Blender to accept it (majior.minor.patch.build is not accepted)
-          PYTHON_VERSION=${{ steps.versioning.outputs.PYTHON_VERSION }}
+          
+          BLENDER_VERSION=${{ steps.versioning.outputs.BLENDER_VERSION }}
           sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
-          sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
+          sed -i "s/version\": (.*/version\": ($BLENDER_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
 
       - name: Print version name
         run: |
           echo "### Version: ${{ steps.versioning.outputs.VERSION }}" >> $GITHUB_STEP_SUMMARY
-          echo "### Python Version: ${{ steps.versioning.outputs.PYTHON_VERSION }}" >> $GITHUB_STEP_SUMMARY
+          echo "### Blender Version: ${{ steps.versioning.outputs.BLENDER_VERSION }}" >> $GITHUB_STEP_SUMMARY
 
       - name: Create zip file
         run: |
