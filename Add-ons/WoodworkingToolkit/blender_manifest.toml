@@ -5,7 +5,7 @@ version = "__VERSION__"
 name = "Woodworking Toolkit"
 tagline = "A toolkit for woodworking modeling and tools in Blender"
 author = "Alessandro Piccione"
-license = "Unlicense"
+license = ["GPL-3.0"]
 type = "add-on"
 
 blender_version_min = "4.3.0"
