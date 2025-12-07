@@ -26,7 +26,6 @@ jobs:
 
       - name: Update version in manifest and init file
         run: |
-          VERSION="${env.VERSION}"
           sed -i "s/__VERSION__/$VERSION/" Add-ons/WoodworkingToolkit/blender_manifest.toml
           sed -i "s/version\": (.*/version\": ($PYTHON_VERSION),/" Add-ons/WoodworkingToolkit/__init__.py
 
