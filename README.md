@@ -1,5 +1,7 @@
 # Blender
 
+[![Create Woodworking-Toolkit add-on Zip](https://github.com/alex-piccione/blender/actions/workflows/deploy-addon-woodworking-toolkit.yml/badge.svg)](https://github.com/alex-piccione/blender/actions/workflows/deploy-addon-woodworking-toolkit.yml)  
+
 Scripts and tips for Blender 3D program.  
 Docs: https://docs.blender.org/manual/en/latest/search.html?q=grid&check_keywords=yes&area=default
 

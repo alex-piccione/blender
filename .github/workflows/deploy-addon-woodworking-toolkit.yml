@@ -6,7 +6,8 @@ on:
       - main
 
 env:
-  VERSION: 0.1.${{ github.run_number }}
+  #VERSION: 0.1.${{ github.run_number }}
+  VERSION: ${{ format-time(github.event.repository.pushed_at, 'yy.MM.dd') }}.${{ github.run_number }}
 
 jobs:
   build:
