@@ -20,7 +20,7 @@ jobs:
           zip -r woodworking_toolkit_${{ env.VERSION }}.zip Add-ons/WoodworkingToolkit
 
       - name: Upload artifact
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@v4
         with:
           name: woodworking_toolkit_${{ env.VERSION }}.zip
           path: woodworking_toolkit_${{ env.VERSION }}.zip
