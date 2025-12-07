@@ -7,7 +7,8 @@ on:
 
 env:
   #VERSION: 0.1.${{ github.run_number }}
-  VERSION: ${{ format-time(github.event.repository.pushed_at, 'yy.MM.dd') }}.${{ github.run_number }}
+  #VERSION: ${{ format-time(github.event.repository.pushed_at, 'yy.MM.dd') }}.${{ github.run_number }}
+  VERSION: ${{ format('{0:yy.MM.dd}', github.event.repository.pushed_at) }}.${{ github.run_number }}
 
 jobs:
   build:
@@ -21,12 +22,6 @@ jobs:
       - name: Create zip file
         run: |
           zip -r woodworking_toolkit_${{ env.VERSION }}.zip Add-ons/WoodworkingToolkit
-
-      #- name: Upload artifact
-      #  uses: actions/upload-artifact@v4
-      #  with:
-      #    name: woodworking_toolkit_${{ env.VERSION }}.zip
-      #    path: woodworking_toolkit_${{ env.VERSION }}.zip
 
       - name: Create GitHub Release
         id: create_release
