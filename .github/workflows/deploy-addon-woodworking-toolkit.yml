@@ -6,22 +6,24 @@ on:
       - main
 
 env:
-  #VERSION: 0.1.${{ github.run_number }}
-  #VERSION: ${{ format-time(github.event.repository.pushed_at, 'yy.MM.dd') }}.${{ github.run_number }}
-  VERSION: ${{ format('{0:yy.MM.dd}', github.event.repository.pushed_at) }}.${{ github.run_number }}
+  VERSION: 0.1.${{ github.run_number }}  # default to avoid intellisense error
+  #VERSION: ${{ format('{0:yy.MM.dd}', github.event.repository.pushed_at) }}.${{ github.run_number }}
 
 jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
       contents: write  # Grant write permission to the GITHUB_TOKEN
-    steps:
+    steps:     
+      - name: Create Version
+        run: echo "VERSION=$(date +'%y.%m.%d')".${{ github.run_number }} >> $GITHUB_ENV
+
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Create zip file
-        run: |
-          zip -r woodworking_toolkit_${{ env.VERSION }}.zip Add-ons/WoodworkingToolkit
+        run: |          
+          zip -r artifact.zip Add-ons/WoodworkingToolkit
 
       - name: Create GitHub Release
         id: create_release
@@ -29,10 +31,9 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} # This token is provided by GitHub
         with:
-          tag_name: v${{ env.VERSION }}
+          tag_name: ${{ env.VERSION }}
           release_name: Woodworking Toolkit v${{ env.VERSION }}
-          body: |
-            Release of Woodworking Toolkit v${{ env.VERSION }}
+          body: Release of Woodworking Toolkit v${{ env.VERSION }}
           draft: false
           prerelease: false
 
@@ -42,6 +43,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./woodworking_toolkit_${{ env.VERSION }}.zip
-          asset_name: woodworking_toolkit_${{ env.VERSION }}.zip
+          asset_path: ./artifact.zip
+          asset_name: woodworking_toolkit_v${{ env.VERSION }}.zip
           asset_content_type: application/zip
