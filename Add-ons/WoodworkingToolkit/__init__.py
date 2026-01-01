@@ -12,11 +12,13 @@ bl_info = {
 import bpy
 from . import ui
 from . import operators
+from . import rotations
 from . import add_panel
 
 classes = (
     ui.WOODWORKING_PT_panel,
     operators.WOODWORKING_OT_round_corner,
+    rotations.WOODWORKING_OT_rotate_object,
     add_panel.WOODWORKING_OT_add_panel,
 )
 
