@@ -1,50 +1,92 @@
+import bpy
 import math
+from mathutils import Matrix, Euler
 
-DEG90 = math.radians(90)  # 1.5708 radians
+class WOODWORKING_OT_rotate_object(bpy.types.Operator):
+    """Rotate object by fixed amount"""
+    bl_idname = "woodworking.rotate_object"
+    bl_label = "Rotate Object"
+    bl_options = {'REGISTER', 'UNDO'}
+    
+    axis: bpy.props.EnumProperty(
+        name="Axis",
+        items=[
+            ('X', "X", "X axis"),
+            ('Y', "Y", "Y axis"),
+            ('Z', "Z", "Z axis"),
+        ]
+    )
+    
+    angle: bpy.props.FloatProperty(
+        name="Angle",
+        default=90.0,
+        unit='ROTATION'  # This tells Blender it's in degrees!
+    )
+    
+    @classmethod
+    def poll(cls, context):
+        return context.active_object is not None
+    
+    def execute(self, context):
+        obj = context.active_object
+        
+        # Convert angle to radians for the rotation matrix
+        angle_rad = math.radians(self.angle)
+        
+        # Create rotation matrix
+        if self.axis == 'X':
+            rot_mat = Matrix.Rotation(angle_rad, 4, 'X')
+        elif self.axis == 'Y':
+            rot_mat = Matrix.Rotation(angle_rad, 4, 'Y')
+        else:  # 'Z'
+            rot_mat = Matrix.Rotation(angle_rad, 4, 'Z')
+        
+        # Apply rotation to object's matrix
+        obj.matrix_world = obj.matrix_world @ rot_mat
+        
+        # Update the object
+        obj.update_tag()
+        
+        return {'FINISHED'}
 
+
+# In your draw function:
 def draw(layout):
-
     box = layout.box()
     box.label(text="Rotation")
     
     # X Axis
     row_x = box.row()
     row_x.label(text="X:")
-
-    op = row_x.operator("transform.rotate", text="+90")
-    op.value = DEG90
-    op.constraint_axis = (True, False, False)
-    op.release_confirm=True # apply
-
-    op = row_x.operator("transform.rotate", text="-90")
-    op.value = -DEG90
-    op.constraint_axis = (True, False, False)
-    op.release_confirm=True # apply
+    
+    op = row_x.operator("woodworking.rotate_object", text="+90")
+    op.axis = 'X'
+    op.angle = 90.0
+    
+    op = row_x.operator("woodworking.rotate_object", text="-90")
+    op.axis = 'X'
+    op.angle = -90.0
     
     # Y Axis
     row_y = box.row()
     row_y.label(text="Y:")
-
-    op = row_y.operator("transform.rotate", text="+90")
-    op.value = DEG90
-    op.constraint_axis = (False, True, False)
-    op.release_confirm=True
-
-    op = row_y.operator("transform.rotate", text="-90")
-    op.value = -DEG90
-    op.constraint_axis = (False, True, False)
-    op.release_confirm=True
+    
+    op = row_y.operator("woodworking.rotate_object", text="+90")
+    op.axis = 'Y'
+    op.angle = 90.0
+    
+    op = row_y.operator("woodworking.rotate_object", text="-90")
+    op.axis = 'Y'
+    op.angle = -90.0
     
     # Z Axis
     row_z = box.row()
     row_z.label(text="Z:")
-
-    op = row_z.operator("transform.rotate", text="+90")
-    op.value = DEG90
-    op.constraint_axis = (False, False, True)
-    op.release_confirm=True
-
-    op = row_z.operator("transform.rotate", text="-90")
-    op.value = -DEG90
-    op.constraint_axis = (False, False, True)
-    op.release_confirm=True
+    
+    op = row_z.operator("woodworking.rotate_object", text="+90")
+    op.axis = 'Z'
+    op.angle = 90.0
+    
+    op = row_z.operator("woodworking.rotate_object", text="-90")
+    op.axis = 'Z'
+    op.angle = -90.0
