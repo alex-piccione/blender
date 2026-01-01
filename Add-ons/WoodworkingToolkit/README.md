@@ -5,8 +5,8 @@ A Blender add-on that provides a set of tools to improve general 3D modeling wor
 
 ## Features
 - Quick-access modeling utilities  
-- Tools designed specifically for woodworking object creation  
-- Integrated panel in the **3D View > Sidebar > Woodworking Tab**  
+- Tools designed specifically for woodworking objects creation  
+- Integrated panel in the **3D View > Sidebar > Woodworking** tab
 - Supports Blender **4.3 and later**  
 
 ---
