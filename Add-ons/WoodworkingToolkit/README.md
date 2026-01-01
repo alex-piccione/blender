@@ -13,6 +13,8 @@ A Blender add-on that provides a set of tools to improve general 3D modeling wor
 
 ## Installation
 
+Release: https://github.com/alex-piccione/blender/releases
+
 ### From ZIP (recommended)
 1. Download the latest release ZIP (or generate one from this repository).  
 2. In Blender, go to **Edit → Preferences → Add-ons**.  
@@ -24,3 +26,4 @@ A Blender add-on that provides a set of tools to improve general 3D modeling wor
 If you're developing or modifying the add-on:
 1. Clone this repository.  
 2. Zip the folder:  
+...

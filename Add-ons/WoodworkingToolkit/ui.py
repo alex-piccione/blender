@@ -28,3 +28,7 @@ class WOODWORKING_PT_panel(bpy.types.Panel):
         ## Round Corner button
         row = layout.row()
         row.operator("woodworking.round_corner", text="Round Corner")
+
+        ## Add wood panel button
+        row = layout.row()
+        row.operator("woodworking.add_panel", text="Add Panel")
