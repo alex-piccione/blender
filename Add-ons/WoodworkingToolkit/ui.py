@@ -28,7 +28,7 @@ class WOODWORKING_PT_panel(bpy.types.Panel):
         row.operator("object.origin_set", text="Set Origin on 3D Cursor").type = "ORIGIN_CURSOR"
 
         ## Rotations        
-        rotations.draw(layout)
+        rotations.draw_rotation_controls(layout)
 
         ## Round Corner button
         row = layout.row()

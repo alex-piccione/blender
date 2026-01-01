@@ -15,13 +15,13 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
             ('Y', "Y", "Y axis"),
             ('Z', "Z", "Z axis"),
         ]
-    )
+    ) # type: ignore
     
     angle: bpy.props.FloatProperty(
         name="Angle",
         default=90.0,
         unit='ROTATION'  # This tells Blender it's in degrees!
-    )
+    ) # type: ignore
     
     @classmethod
     def poll(cls, context):
@@ -51,7 +51,7 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
 
 
 # In your draw function:
-def draw(layout):
+def draw_rotation_controls (layout):
     box = layout.box()
     box.label(text="Rotation")
     
