@@ -1,6 +1,4 @@
 import math
-import bpy
-import bmesh
 
 DEG90 = math.radians(90)  # 1.5708 radians
 
@@ -18,6 +16,7 @@ def draw(layout):
     op = row_x.operator("transform.rotate", text="-90")
     op.value = -DEG90
     op.constraint_axis = (True, False, False)
+    op.release_confirm=True # apply
     
     # Y Axis
     row_y = box.row()
@@ -28,6 +27,7 @@ def draw(layout):
     op = row_y.operator("transform.rotate", text="-90")
     op.value = -DEG90
     op.constraint_axis = (False, True, False)
+    op.release_confirm=True
     
     # Z Axis
     row_z = box.row()
@@ -38,4 +38,4 @@ def draw(layout):
     op = row_z.operator("transform.rotate", text="-90")
     op.value = -DEG90
     op.constraint_axis = (False, False, True)
-
+    op.release_confirm=True
