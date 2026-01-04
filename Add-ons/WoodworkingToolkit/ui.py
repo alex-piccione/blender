@@ -1,5 +1,4 @@
 import bpy
-
 from . import rotations
 
 class WOODWORKING_PT_panel(bpy.types.Panel):

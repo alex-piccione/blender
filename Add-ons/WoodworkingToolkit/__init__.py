@@ -11,15 +11,17 @@ bl_info = {
 
 import bpy
 from . import ui
-from . import operators
+from . import round_corner
 from . import rotations
 from . import add_panel
+from . import add_cylinder
 
 classes = (
     ui.WOODWORKING_PT_panel,
-    operators.WOODWORKING_OT_round_corner,
+    round_corner.WOODWORKING_OT_round_corner,
     rotations.WOODWORKING_OT_rotate_object,
     add_panel.WOODWORKING_OT_add_panel,
+    add_cylinder.WOODWORKING_OT_add_cylinder,
 )
 
 def register():
