@@ -1,6 +1,6 @@
 import bpy
 import bmesh
-from helper import mm, cm
+from utils import mm, cm
 
 class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
     """Add a cylinder"""
