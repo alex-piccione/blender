@@ -26,10 +26,12 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         description="Length (X axis)",
         default=cm(2),
         min=cm(1),
+        max=cm(100),
         unit='LENGTH',
         # Set soft min/max to guide the user slider to common values
-        soft_min=cm(10),
-        soft_max=cm(50)
+        soft_min=cm(2),
+        soft_max=cm(50),
+        step=10
     ) # pyright: ignore[reportInvalidTypeForm]
 
 
