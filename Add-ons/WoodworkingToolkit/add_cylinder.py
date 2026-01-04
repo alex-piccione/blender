@@ -1,8 +1,5 @@
 import bpy
 import bmesh
-#from .utils import mm, cm  # require relative path
-#from helper import units
-#from utils import units
 from .utils import *  # relative path
 
 class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
