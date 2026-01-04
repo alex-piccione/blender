@@ -9,20 +9,16 @@ bl_info = {
     "description": "Add actions usefull for general 3D modeling and more specific for model wood objects."
 }
 
-import os, sys
 import bpy
 from . import ui
+from . import utils
 from . import round_corner
 from . import rotations
 from . import add_panel
 from . import add_cylinder
 
-# Add addon directory to Python path
-addon_dir = os.path.dirname(os.path.abspath(__file__))
-if addon_dir not in sys.path:
-    sys.path[0:0] = [addon_dir]  # Prepend for priority
-
 classes = (
+    utils.units,
     ui.WOODWORKING_PT_panel,
     round_corner.WOODWORKING_OT_round_corner,
     rotations.WOODWORKING_OT_rotate_object,
@@ -40,3 +36,11 @@ def unregister():
 
 if __name__ == "__main__":
     register()
+
+
+# To make other stuff visible in Blender
+import sys
+import os
+addon_dir = os.path.dirname(os.path.abspath(__file__))
+if addon_dir not in sys.path:
+    sys.path.insert(0, addon_dir)
