@@ -55,17 +55,20 @@ def draw_rotation_controls (layout):
     box = layout.box()
     box.label(text="Rotation")
     
-    # X Axis
-    row_x = box.row()
-    row_x.label(text="X:")
+    #row_x = box.row(align=True)
+    #row_x.label(text="X:", icon='GIZMO_ARROW_X')
+    #row_x.operator("woodworking.rotate_object", text="+90°", icon='GIZMO_ARROW_X', emboss=False).axis = 'X'; row_x.operator.axis = 90.0
+    #row_x.operator("woodworking.rotate_object", text="-90°", icon='GIZMO_ARROW_X', emboss=False).axis = 'X'; row_x.operator.angle = -90.0
+
+    # X (Red)
+    row_x = box.row(align=True)
+    row_x.label(text="X:", icon='GIZMO_ARROW_X')
     
-    op = row_x.operator("woodworking.rotate_object", text="+90")
-    op.axis = 'X'
-    op.angle = 90.0
+    op = row_x.operator("woodworking.rotate_object", text="+90°", icon='GIZMO_ARROW_X', emboss=False)
+    op.axis = 'X';  op.angle = 90.0
     
-    op = row_x.operator("woodworking.rotate_object", text="-90")
-    op.axis = 'X'
-    op.angle = -90.0
+    op = row_x.operator("woodworking.rotate_object", text="-90", icon='GIZMO_ARROW_X', emboss=False)
+    op.axis = 'X';  op.angle = -90.0
     
     # Y Axis
     row_y = box.row()
