@@ -43,8 +43,47 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         return context.window_manager.invoke_props_dialog(self)
 
     def execute(self, context):
+        # Use built-in primitive operator with your params
+        bpy.ops.mesh.primitive_cylinder_add(
+            vertices=32,                    # Sides (adjust as needed)
+            radius=self.diameter / 2,       # Diameter → radius
+            depth=self.length,              # Length = depth
+            location=context.scene.cursor.location,
+            enter_editmode=False
+        )
+
+        # Get the new cylinder
+        obj = context.active_object
+        obj.name = "Cylinder"
+
+        # Select and activate
+        obj.select_set(True)
+        context.view_layer.objects.active = obj
+        
+        self.report({"INFO"}, f"Created Cylinder. Diameter: {self.diameter*1000:.1f}mm, Length: {self.length*1000:.1f}mm")
+        return {'FINISHED'}
+
+"""
+
         # Create a new mesh with a Cylinder
         mesh = bpy.data.meshes.new(name="Cylinder")
+        bm = bmesh.new()
+
+        # Create base circle (segments=16 for medium-smooth cylinder)
+        circle = bmesh.ops.create_circle(
+            bm,
+            cap_ends=False,      # No end caps yet
+            diameter=1.0,        # Scale later
+            segments=16
+        )
+        verts_base = [v for v in circle["verts"]]
+
+        # Extrude to length
+        circle = bmesh.ops.extrude_vert_indiv(bm, verts=verts_base)
+        verts_extrude = [e for e in ret["faces"]][0].verts  # Top ring
+
+
+
 
         # Create the 1x1x1 cylinder at origin
         bm = bmesh.new()
@@ -75,3 +114,4 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         self.report({"INFO"}, f"Created Cylinder. Diameter: {(self.diameter*10.):.1f}cm, Length: {(self.length*10.):.1f}cm")
 
         return {'FINISHED'}
+"""
