@@ -15,7 +15,7 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         min=mm(1),
         max=cm(100),
         unit='LENGTH',
-        step=1,
+        step=mm(1),
         precision=3,
         soft_min=mm(2),
         soft_max=mm(10)
@@ -31,7 +31,7 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         # Set soft min/max to guide the user slider to common values
         soft_min=cm(2),
         soft_max=cm(50),
-        step=10
+        step=cm(10)
     ) # pyright: ignore[reportInvalidTypeForm]
 
 
