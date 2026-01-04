@@ -13,7 +13,10 @@ class WOODWORKING_OT_add_cylinder(bpy.types.Operator):
         description="Diameter (Y-Z axis)",
         default=mm(6),
         min=mm(1),
+        max=cm(100),
         unit='LENGTH',
+        step=1,
+        precision=3,
         soft_min=mm(2),
         soft_max=mm(10)
     ) # pyright: ignore[reportInvalidTypeForm]
