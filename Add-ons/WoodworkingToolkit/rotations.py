@@ -1,6 +1,6 @@
 import bpy
 import math
-from mathutils import Matrix, Euler
+from mathutils import Matrix
 
 class WOODWORKING_OT_rotate_object(bpy.types.Operator):
     """Rotate object by fixed amount"""

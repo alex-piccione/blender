@@ -2,7 +2,7 @@ import bpy
 import bmesh
 
 class WOODWORKING_OT_add_panel(bpy.types.Operator):
-    """Add a new wood panel"""
+    """Add a panel"""
     bl_idname = "woodworking.add_panel"
     bl_label = "Add Panel"
     bl_options = {'REGISTER', 'UNDO'}
