@@ -6,7 +6,7 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
     """Rotate object by fixed amount"""
     bl_idname = "woodworking.rotate_object"
     bl_label = "Rotate Object"
-    bl_options = {'REGISTER', 'UNDO'}
+    bl_options = {'UNDO'}  # {'REGISTER', 'UNDO'}  with REGISTER we have the REDO panel
     
     axis: bpy.props.EnumProperty(
         name="Axis",
@@ -34,19 +34,21 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
         angle_rad = math.radians(self.angle)
         
         # Create rotation matrix
-        if self.axis == 'X':
-            rot_mat = Matrix.Rotation(angle_rad, 4, 'X')
-        elif self.axis == 'Y':
-            rot_mat = Matrix.Rotation(angle_rad, 4, 'Y')
-        else:  # 'Z'
-            rot_mat = Matrix.Rotation(angle_rad, 4, 'Z')
+        rot_mat = Matrix.Rotation(angle_rad, 4, self.axis)
         
         # Apply rotation to object's matrix
         obj.matrix_world = obj.matrix_world @ rot_mat
         
         # Update the object
         obj.update_tag()
-        
+
+        # Apply rotation so Item tab shows 0°
+        bpy.ops.object.transform_apply(
+            location=False,
+            rotation=True,
+            scale=False
+        )
+
         return {'FINISHED'}
 
 
