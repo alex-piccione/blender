@@ -55,7 +55,7 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
 # In your UI draw function:
 def draw_operator (layout):
     box = layout.box()
-    box.label(text="Rotation")
+    box.label(text="Rotate")
     
     # X (Red)
     row_x = box.row(align=True)
