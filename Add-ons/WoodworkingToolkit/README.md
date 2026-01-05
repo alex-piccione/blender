@@ -51,15 +51,20 @@ Release: https://github.com/alex-piccione/blender/releases
 4. Select the ZIP file.  
 5. Done
 
-### From source directory
-If you're developing or modifying the add-on:
+### From source directory (development)
+If you want to test the local changes or build it yourself:
 1. Clone this repository.  
-2. Zip the folder "WoodworkingToolkit" (The ZIP MUST contains also this folder) 
+2. Create the valid ZIP of the add-on with this Bash script (it uses Windows Powershell for zip):
 ```bash 
-   cd Add-ons
-   zip -r ../woodworking_toolkit-0.0.0.zip WoodworkingToolkit
+create_zip.sh
 ``` 
 3. In Blender, go to **Edit → Preferences → Add-ons**.  
 4. Click **Install from disk**  
 5. Select the ZIP file.  
 6. Done
+
+**Note**  
+If it fails, with this error:
+> register_class(...): already registered as a subclass 'WOODWORKING_PT_panel'
+
+you need to delete the existing add-on; go to the Blender folder and delete the add-on folder from the _extensions_ folder.  

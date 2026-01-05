@@ -79,8 +79,7 @@ def draw_operator (layout):
     
     op = row_y.operator("woodworking.rotate_object", text="+90°")
     op.axis = 'Y'
-    op.angle = 90.0   
-
+    op.angle = 90.0
     
     # Z (Blue)
     row_z = box.row(align=True)

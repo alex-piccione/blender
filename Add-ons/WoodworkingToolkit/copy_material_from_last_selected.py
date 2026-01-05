@@ -1,6 +1,5 @@
 import bpy
 
-
 class WOODWORKING_OT_copy_material_from_last_selected(bpy.types.Operator):
     """Copy the Material from the last selected object to all the selected ones"""
     bl_idname = "woodworking.copy_material_from_last_selected"
@@ -18,6 +17,7 @@ class WOODWORKING_OT_copy_material_from_last_selected(bpy.types.Operator):
             bpy.ops.object.material_slot_copy()
             self.report({"INFO"}, "Copied materials to selected objects")
             return {'FINISHED'}
+
 
 # In your UI draw function:
 def draw_operator(layout):
