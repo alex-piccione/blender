@@ -55,30 +55,27 @@ def draw_rotation_controls (layout):
     box = layout.box()
     box.label(text="Rotation")
     
-    #row_x = box.row(align=True)
-    #row_x.label(text="X:", icon='GIZMO_ARROW_X')
-    #row_x.operator("woodworking.rotate_object", text="+90°", icon='GIZMO_ARROW_X', emboss=False).axis = 'X'; row_x.operator.axis = 90.0
-    #row_x.operator("woodworking.rotate_object", text="-90°", icon='GIZMO_ARROW_X', emboss=False).axis = 'X'; row_x.operator.angle = -90.0
-
     # X (Red)
     row_x = box.row(align=True)
-    row_x.label(text="X:", icon='COLOR_RED')
+    row_x.label(text="X:", )
     
-    op = row_x.operator("woodworking.rotate_object", text="+90°", icon='COLOR_RED', emboss=False)
-    op.axis = 'X';  op.angle = 90.0
+    op = row_x.operator("woodworking.rotate_object", text="+90°")
+    op.axis = 'X'
+    op.angle = 90.0
     
-    op = row_x.operator("woodworking.rotate_object", text="-90", icon='COLOR_RED', emboss=False)
-    op.axis = 'X';  op.angle = -90.0
+    op = row_x.operator("woodworking.rotate_object", text="-90°")
+    op.axis = 'X'
+    op.angle = -90.0
     
     # Y Axis
     row_y = box.row()
     row_y.label(text="Y:")
     
-    op = row_y.operator("woodworking.rotate_object", text="+90")
+    op = row_y.operator("woodworking.rotate_object", text="+90°")
     op.axis = 'Y'
     op.angle = 90.0
     
-    op = row_y.operator("woodworking.rotate_object", text="-90")
+    op = row_y.operator("woodworking.rotate_object", text="-90°")
     op.axis = 'Y'
     op.angle = -90.0
     
@@ -86,10 +83,8 @@ def draw_rotation_controls (layout):
     row_z = box.row()
     row_z.label(text="Z:")
     
-    op = row_z.operator("woodworking.rotate_object", text="+90")
-    op.axis = 'Z'
-    op.angle = 90.0
+    op = row_z.operator("woodworking.rotate_object", text="+90°")
+    op.axis = 'Z';  op.angle = 90.0
     
-    op = row_z.operator("woodworking.rotate_object", text="-90")
-    op.axis = 'Z'
-    op.angle = -90.0
+    op = row_z.operator("woodworking.rotate_object", text="-90°")
+    op.axis = 'Z';  op.angle = -90.0
