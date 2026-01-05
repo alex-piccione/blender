@@ -21,5 +21,5 @@ class WOODWORKING_OT_copy_material_from_last_selected(bpy.types.Operator):
 # In your UI draw function:
 def draw_operator(layout):
     layout.operator("woodworking.copy_material_to_selected", 
-                   text="Copy Material to Selected", 
-                   icon='MATERIAL_DATA')
+                   text="Copy Material from last selected", 
+                   icon='MATERIAL')
