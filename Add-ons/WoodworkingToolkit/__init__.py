@@ -11,11 +11,11 @@ bl_info = {
 
 import bpy
 from . import ui
-from . import utils
 from . import round_corner
 from . import rotations
 from . import add_panel
 from . import add_cylinder
+from . import copy_material_from_last_selected
 
 # To make non-class stuff visible in Blender
 import os, sys
@@ -27,6 +27,7 @@ classes = (
     rotations.WOODWORKING_OT_rotate_object,
     add_panel.WOODWORKING_OT_add_panel,
     add_cylinder.WOODWORKING_OT_add_cylinder,
+    copy_material_from_last_selected.WOODWORKING_OT_copy_material_from_last_selected,
 )
 
 def register():

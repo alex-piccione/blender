@@ -52,41 +52,44 @@ class WOODWORKING_OT_rotate_object(bpy.types.Operator):
         return {'FINISHED'}
 
 
-# In your draw function:
-def draw_rotation_controls (layout):
+# In your UI draw function:
+def draw_operator (layout):
     box = layout.box()
     box.label(text="Rotation")
     
     # X (Red)
     row_x = box.row(align=True)
-    row_x.label(text="X:", )
-    
-    op = row_x.operator("woodworking.rotate_object", text="+90°")
-    op.axis = 'X'
-    op.angle = 90.0
-    
+    row_x.label(text="X:")
+
     op = row_x.operator("woodworking.rotate_object", text="-90°")
     op.axis = 'X'
     op.angle = -90.0
     
-    # Y Axis
-    row_y = box.row()
-    row_y.label(text="Y:")
+    op = row_x.operator("woodworking.rotate_object", text="+90°")
+    op.axis = 'X'
+    op.angle = 90.0   
     
-    op = row_y.operator("woodworking.rotate_object", text="+90°")
-    op.axis = 'Y'
-    op.angle = 90.0
+    # Y (Green)
+    row_y = box.row(align=True)
+    row_y.label(text="Y:")
     
     op = row_y.operator("woodworking.rotate_object", text="-90°")
     op.axis = 'Y'
     op.angle = -90.0
     
-    # Z Axis
-    row_z = box.row()
+    op = row_y.operator("woodworking.rotate_object", text="+90°")
+    op.axis = 'Y'
+    op.angle = 90.0   
+
+    
+    # Z (Blue)
+    row_z = box.row(align=True)
     row_z.label(text="Z:")
+
+    op = row_z.operator("woodworking.rotate_object", text="-90°")
+    op.axis = 'Z'
+    op.angle = -90.0
     
     op = row_z.operator("woodworking.rotate_object", text="+90°")
-    op.axis = 'Z';  op.angle = 90.0
-    
-    op = row_z.operator("woodworking.rotate_object", text="-90°")
-    op.axis = 'Z';  op.angle = -90.0
+    op.axis = 'Z'
+    op.angle = 90.0    

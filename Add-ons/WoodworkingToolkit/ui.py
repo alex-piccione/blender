@@ -1,5 +1,6 @@
 import bpy
 from . import rotations
+from . import copy_material_from_last_selected
 
 class WOODWORKING_PT_panel(bpy.types.Panel):
     """Creates a Panel in the Object properties windows"""
@@ -27,7 +28,7 @@ class WOODWORKING_PT_panel(bpy.types.Panel):
         row.operator("object.origin_set", text="Set Origin on 3D Cursor").type = "ORIGIN_CURSOR"
 
         ## Rotations        
-        rotations.draw_rotation_controls(layout)
+        rotations.draw_operator(layout)
 
         ## Round Corner button
         row = layout.row()
@@ -40,3 +41,6 @@ class WOODWORKING_PT_panel(bpy.types.Panel):
         ## Add cylinder button
         row = layout.row()
         row.operator("woodworking.add_cylinder", text="Add Cylinder")
+
+        ## Copy Material
+        copy_material_from_last_selected.draw_operator(layout)
