@@ -7,7 +7,8 @@ class WOODWORKING_OT_copy_material_from_last_selected(bpy.types.Operator):
     bl_label = "Copy Material Object"
     bl_options = {'REGISTER', 'UNDO'}  # {'REGISTER', 'UNDO'}  with REGISTER we have the REDO panel
     
-    def poll(self, context):
+    @classmethod
+    def poll(cls, context):
         return (context.active_object and 
                 context.active_object.type == 'MESH' and 
                 len(context.selected_objects) > 1)
